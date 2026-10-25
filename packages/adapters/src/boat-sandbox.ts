@@ -46,7 +46,8 @@ import { shellExportScript } from "./sandbox-shell-environment.js";
 import { withAbort } from "./web-ssrf.js";
 
 const BOAT_API_BASE = "https://boat.dev/api/v1";
-const BOAT_WORKSPACE = "/home/user/rakazo-home";
+const BOAT_WORKSPACE = "/home/user/lumio-home";
+const PREVIOUS_BOAT_WORKSPACE = "/home/user/rakazo-home";
 const BOAT_BROWSER_PROFILES = `${BOAT_WORKSPACE}/.browser-profiles`;
 /** Outside the workspace so checkpoints never carry it. Boat runs every command as `user`. */
 const BOAT_COMMAND_ENV = "/home/user/.lumio-command-env";
@@ -1349,22 +1350,33 @@ function boatCwd(cwd: string | undefined): string {
     cwd === "/home/lumio" ||
     cwd === "/home/rakazo" ||
     cwd === "/home/user" ||
-    cwd === BOAT_WORKSPACE
+    cwd === BOAT_WORKSPACE ||
+    cwd === PREVIOUS_BOAT_WORKSPACE ||
+    cwd === "rakazo-home"
   ) {
-    return "rakazo-home";
+    return "lumio-home";
   }
   const relative = cwd.startsWith(`${BOAT_WORKSPACE}/`)
     ? cwd.slice(BOAT_WORKSPACE.length + 1)
-    : cwd.startsWith("/home/lumio/")
-      ? cwd.slice("/home/lumio/".length)
-      : cwd.startsWith("/home/rakazo/")
-        ? cwd.slice("/home/rakazo/".length)
-        : cwd;
-  return path.posix.join("rakazo-home", normalizeWorkspacePath(relative));
+    : cwd.startsWith(`${PREVIOUS_BOAT_WORKSPACE}/`)
+      ? cwd.slice(PREVIOUS_BOAT_WORKSPACE.length + 1)
+      : cwd.startsWith("rakazo-home/")
+        ? cwd.slice("rakazo-home/".length)
+        : cwd.startsWith("/home/lumio/")
+          ? cwd.slice("/home/lumio/".length)
+          : cwd.startsWith("/home/rakazo/")
+            ? cwd.slice("/home/rakazo/".length)
+            : cwd;
+  return path.posix.join("lumio-home", normalizeWorkspacePath(relative));
 }
 
 function configureBoatWorkspaceCommand(): string {
-  return `mkdir -p ${shellQuote(BOAT_BROWSER_PROFILES)} && ${commandEnvDirectoryCommand()}`;
+  return [
+    `if [ -d ${shellQuote(PREVIOUS_BOAT_WORKSPACE)} ] && [ ! -e ${shellQuote(BOAT_WORKSPACE)} ]; then`,
+    ` mv ${shellQuote(PREVIOUS_BOAT_WORKSPACE)} ${shellQuote(BOAT_WORKSPACE)};`,
+    " fi &&",
+    ` mkdir -p ${shellQuote(BOAT_BROWSER_PROFILES)} && ${commandEnvDirectoryCommand()}`,
+  ].join("");
 }
 
 /** What a computer snapshot captures, in order: the same setup `prepare` repeats, then a check. */

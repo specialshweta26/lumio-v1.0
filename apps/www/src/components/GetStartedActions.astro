@@ -6,7 +6,6 @@ import {
   ANDROID_APK_URL,
   APP_URL,
   GITHUB_URL,
-  IOS_APP_URL,
 } from "../site";
 
 type Props = {
@@ -37,7 +36,6 @@ const githubPlatforms = ["ios", "android", "web", "mac", "windows", "linux"]
   <a class="button button--primary" href={APP_URL} data-show="mac windows linux web">
     {copy.getStarted}
   </a>
-  <a class="button button--primary" href={IOS_APP_URL} data-show="ios">{copy.download.ios}</a>
   <a class="button button--primary" href={ANDROID_APK_URL} data-show="android">
     {copy.download.android}
   </a>

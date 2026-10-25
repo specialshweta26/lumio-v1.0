@@ -3,7 +3,6 @@ import {
   buildIdAt,
   CLIENT_BUILD_HEADER,
   formatClientBuild,
-  IOS_APP_STORE_URL,
 } from "@lumio/contracts";
 import * as Updates from "expo-updates";
 import type { AppStateStatus } from "react-native";
@@ -52,9 +51,9 @@ export async function applyRequiredUpdate(): Promise<void> {
   } catch {
     // An unreachable update server falls through to the store.
   }
-  await Linking.openURL(Platform.OS === "ios" ? IOS_APP_STORE_URL : ANDROID_APK_URL).catch(
-    () => undefined,
-  );
+  if (Platform.OS !== "ios") {
+    await Linking.openURL(ANDROID_APK_URL).catch(() => undefined);
+  }
 }
 
 let prompting = false;

@@ -158,7 +158,7 @@ describe("ObjectAgentHomeStore", () => {
     expect(object!.bytes.includes(Buffer.from("very-secret-cookie"))).toBe(false);
     expect(object!.bytes.includes(Buffer.from("todo.txt"))).toBe(false);
     expect(rows[0]!.homeStorageRevision).toBe(revision);
-    expect(rows[0]!.homeStorageKey).toMatch(/^rkz1:/);
+    expect(rows[0]!.homeStorageKey).toMatch(/^lum1:/);
   });
 
   it("restores a home on a host whose cache is empty", async () => {

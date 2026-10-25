@@ -422,6 +422,12 @@ describe("E2B computer backend", () => {
     await provider.prepare(computer, context);
 
     expect(command.mock.calls.every(([value]) => value.includes("apt-get"))).toBe(true);
+    expect(
+      command.mock.calls.every(
+        ([value]) =>
+          value.includes("/home/user/rakazo-home") && value.includes("/home/user/lumio-home"),
+      ),
+    ).toBe(true);
     expect(desktop.launch).not.toHaveBeenCalled();
   });
 
@@ -473,7 +479,7 @@ describe("E2B computer backend", () => {
       context,
     );
     expect(command).toHaveBeenLastCalledWith(
-      expect.stringContaining("/home/user/rakazo-home/notes/readme.md"),
+      expect.stringContaining("/home/user/lumio-home/notes/readme.md"),
       expect.anything(),
     );
   });
@@ -503,7 +509,7 @@ describe("E2B computer backend", () => {
 
     const root = await provider.connectTerminal(computer, { controlToken: "lease-1" }, context);
     expect(command).toHaveBeenLastCalledWith(
-      expect.stringContaining("/home/user/rakazo-home"),
+      expect.stringContaining("/home/user/lumio-home"),
       expect.anything(),
     );
     const socket = new URL(root.url).searchParams.get("path");
@@ -516,7 +522,7 @@ describe("E2B computer backend", () => {
       context,
     );
     expect(command).toHaveBeenLastCalledWith(
-      expect.stringContaining("/home/user/rakazo-home/bots/bot-1"),
+      expect.stringContaining("/home/user/lumio-home/bots/bot-1"),
       expect.anything(),
     );
   });
@@ -849,7 +855,7 @@ describe("sandbox-gone detection", () => {
       "stream reset: The sandbox was killed or reached its end of life while the request was in flight.",
     ),
     new Error("bash: x11vnc: command not found"),
-    new Error("Path /home/user/rakazo-home/notes.md not found"),
+    new Error("Path /home/user/lumio-home/notes.md not found"),
     new Error("tar: /home/user/x: No such file or directory"),
     new TimeoutError(
       "canceled: This error is likely due to exceeding 'requestTimeoutMs'. You can pass the request timeout value as an option when making the request.",
@@ -1031,7 +1037,7 @@ describe("E2B sandbox lifecycle", () => {
     const computer = await provider.provision({ botId: "bot-1", homePath: "/unused" }, context);
     return { fake, provider, computer };
   }
-  const notes = "/home/user/rakazo-home/notes.txt";
+  const notes = "/home/user/lumio-home/notes.txt";
 
   it.each([
     ["listFiles", (p: E2BSandboxProvider, c: ComputerRef) => p.listFiles(c, "", context)],

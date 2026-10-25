@@ -48,12 +48,13 @@ read-only and runs across spaces.
   Without it, a master key derived from `ENCRYPTION_KEY` (id `env`) is used. The
   derived key always stays available for unwrapping, so existing keys keep
   working after you add explicit ones.
-- **Ciphertext.** `rkz1:<space key id>:<base64url(iv | ciphertext | tag)>`,
+- **Ciphertext.** `lum1:<space key id>:<base64url(iv | ciphertext | tag)>`,
   AES-256-GCM with a fresh IV per value. The authenticated data binds the
   table, column, row id and space, so a value copied to another row, column or
-  space fails to decrypt instead of being shown in the wrong place.
+  space fails to decrypt instead of being shown in the wrong place. Existing
+  `rkz1:` rows still decrypt.
 - **JSON columns.** Each message block (and each event payload) is stored as
-  `{ ...queryable scalars, "$sealed": "rkz1:…" }`. The sealed copy is the full
+  `{ ...queryable scalars, "$sealed": "lum1:…" }`. The sealed copy is the full
   original and the only one read back. The scalars kept beside it are the ones
   queries filter on: block `kind`, `status`, `channelId`, `serverId` and
   `artifactId`; payload `messageId`, `notice`, `state`, `updatedAt` and

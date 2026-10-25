@@ -4,14 +4,13 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/specialshweta26/lumio-v1.0?labelColor=black&style=for-the-badge&color=2563EB)](https://github.com/specialshweta26/lumio-v1.0/stargazers)
 [![Discord コミュニティに参加](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?labelColor=black&style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/RWwKa2Sn7h)
-[![App Store で iPhone 版をダウンロード](https://img.shields.io/badge/App%20Store-Download%20for%20iPhone-black?labelColor=black&style=for-the-badge&logo=apple&logoColor=white)](https://apps.apple.com/app/lumio/id6801531099)
 [![Android APK をダウンロード](https://img.shields.io/badge/Android-Download%20APK-black?labelColor=black&style=for-the-badge&logo=android&logoColor=white)](https://github.com/specialshweta26/lumio-v1.0/releases/download/android/lumio.apk)
 
 ![Lumio：本当に自分のものにできる AI チームメイト](./docs/readme-hero.png)
 
 Lumio は、常駐型の AI チームメイトを持てるオープンソースの AI エージェントです。自分のマシンで動かせる
 セルフホスト型の AI アシスタントでもあります。Web 版、Electron デスクトップアプリ、
-[iPhone](https://apps.apple.com/app/lumio/id6801531099) 版と [Android](https://github.com/specialshweta26/lumio-v1.0/releases/download/android/lumio.apk) 版で利用できます。
+[Android](https://github.com/specialshweta26/lumio-v1.0/releases/download/android/lumio.apk) 版で利用できます。
 モデルやコンピューターのプロバイダーは自分で選べるほか、スタック全体をローカルで動かすこともできます。
 
 Grok Bot、Meta Muse、OpenAI Dots、Instinct、OpenClaw、Hermes Agent、Claude Duet の

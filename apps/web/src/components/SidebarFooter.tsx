@@ -1,5 +1,4 @@
 import { Trans, useLingui } from "@lingui/react/macro";
-import { ANDROID_APK_URL, IOS_APP_STORE_URL } from "@lumio/contracts";
 import {
   AppMarkStack,
   Button,
@@ -16,7 +15,6 @@ import {
   LogOut,
   Plug,
   Settings,
-  Smartphone,
   SquareKanban,
   UserRound,
 } from "lucide-react";
@@ -150,15 +148,6 @@ export function SidebarFooter({
               <Gauge className="text-muted-foreground" strokeWidth={1.75} />
               <Trans>Usage</Trans>
             </Button>
-            <a
-              className={`${buttonVariants({ variant: "ghost" })} h-9 w-full justify-start gap-2.5 font-normal`}
-              href={/Android/i.test(navigator.userAgent) ? ANDROID_APK_URL : IOS_APP_STORE_URL}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Smartphone className="text-muted-foreground" strokeWidth={1.75} />
-              <Trans>Get the mobile app</Trans>
-            </a>
             <a
               className={`${buttonVariants({ variant: "ghost" })} h-9 w-full justify-start gap-2.5 font-normal`}
               href="https://github.com/specialshweta26/lumio-v1.0/blob/main/docs/self-host.md"

@@ -89,7 +89,7 @@ Boat stop archives the machine and resume reconnects the same opaque sandbox id.
 
 ## Persistence
 
-The portable computer workspace is the durable boundary. E2B uses `/home/user/rakazo-home`; Docker and local providers expose the equivalent home. Browser profiles are rooted under `.browser-profiles` in that workspace on E2B. Lumio checkpoints transferred workspaces into `AgentHomeStore` at run completion or failure, before explicit stop, and before idle suspension. Docker mounts the Lumio-owned home directly and only advances its revision marker at those boundaries. New or replacement machines import the latest stored workspace before use.
+The portable computer workspace is the durable boundary. E2B uses `/home/user/lumio-home`; Docker and local providers expose the equivalent home. Browser profiles are rooted under `.browser-profiles` in that workspace on E2B. Lumio checkpoints transferred workspaces into `AgentHomeStore` at run completion or failure, before explicit stop, and before idle suspension. Docker mounts the Lumio-owned home directly and only advances its revision marker at those boundaries. New or replacement machines import the latest stored workspace before use.
 
 `LocalAgentHomeStore` keeps the latest workspace under `DATA_DIR/homes/<computer-home-key>` and checkpoint metadata separately under `DATA_DIR/home-revisions`. Replacements are staged before the current copy is swapped, and checkpoints are serialized per computer. This implementation is latest-only rather than an immutable revision archive. Deployments using it must put `DATA_DIR` on a Lumio-owned persistent volume, encrypt that volume at rest, and include it in off-host backups.
 

@@ -8,7 +8,7 @@ import type { MemoryProviderConnectionDraft, MemoryProviderSettingsFormProps } f
 const RESOURCE_ID_PATTERN = /^[A-Za-z0-9_-]{0,512}$/;
 // Lumio writes to these peers, so they cannot be read as the user's own peer.
 function isReservedPeerId(value: string): boolean {
-  return value === "rakazo-shared" || value.startsWith("bot-");
+  return value === "lumio-shared" || value.startsWith("bot-");
 }
 const DEFAULT_LOCAL_BASE_URL = "http://localhost:8000";
 
@@ -120,7 +120,7 @@ export function HonchoSettingsForm({ busy, onConnect }: MemoryProviderSettingsFo
           {!userPeerValid ? (
             <FieldError id={userPeerErrorId}>
               {userPeerFormatValid ? (
-                <Trans>rakazo-shared and IDs starting with bot- are reserved for Lumio.</Trans>
+                <Trans>lumio-shared and IDs starting with bot- are reserved for Lumio.</Trans>
               ) : (
                 <Trans>Use up to 512 letters, digits, _ or -.</Trans>
               )}

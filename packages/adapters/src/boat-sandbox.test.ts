@@ -131,7 +131,7 @@ describe("BoatSandboxProvider", () => {
     expect(
       command.mock.calls.some(([request]) =>
         "commandRequest" in request
-          ? request.commandRequest.command.includes("rakazo-home/.browser-profiles")
+          ? request.commandRequest.command.includes("lumio-home/.browser-profiles")
           : false,
       ),
     ).toBe(true);
@@ -155,7 +155,7 @@ describe("BoatSandboxProvider", () => {
     expect(parse(executeRequest?.command ?? "").at(-1)).toMatch(
       /; 'env' '-u' 'FAILED' '--' 'echo' 'hello'$/,
     );
-    expect(executeRequest?.cwd).toBe("rakazo-home/notes");
+    expect(executeRequest?.cwd).toBe("lumio-home/notes");
 
     await provider.writeFile(
       computer,
@@ -787,7 +787,7 @@ describe("BoatSandboxProvider", () => {
     const [request, init] = fetchMock.mock.calls[0]!;
     const url = new URL(String(request));
     expect(url.pathname).toBe("/api/v1/sandboxes/bx_testbox2/artifacts");
-    expect(url.searchParams.get("path")).toBe(`/home/user/rakazo-home/${filePath}`);
+    expect(url.searchParams.get("path")).toBe(`/home/user/lumio-home/${filePath}`);
     expect(new Headers(init?.headers).get("Authorization")).toBe("Bearer test-key");
     expect(init?.signal).toBe(context.signal);
   });
@@ -824,7 +824,7 @@ describe("BoatSandboxProvider", () => {
       [".browser-profiles/chrome/Default/History", large, false],
       ["bin/a tool", large, true],
     ] as const) {
-      const restored = api.files(computer.id).get(`/home/user/rakazo-home/${path}`);
+      const restored = api.files(computer.id).get(`/home/user/lumio-home/${path}`);
       expect(restored?.executable).toBe(executable);
       expect(Buffer.from(restored!.content).equals(expected)).toBe(true);
     }
@@ -901,7 +901,7 @@ describe("BoatSandboxProvider", () => {
       expect((error as Error).cause).toBeUndefined();
       expect((error as Error).stack).not.toContain(secret);
       expect(command).not.toHaveBeenCalled();
-      expect(api.files(computer.id).has("/home/user/rakazo-home/large.bin")).toBe(false);
+      expect(api.files(computer.id).has("/home/user/lumio-home/large.bin")).toBe(false);
     },
   );
 
@@ -930,11 +930,11 @@ describe("BoatSandboxProvider", () => {
     const artifactRaw = vi.spyOn(FakeBoatApi.prototype, "artifactRaw");
     const { api, provider, computer } = await boat();
     const content = Buffer.alloc(6 * 1024 * 1024, 0xab);
-    api.files(computer.id).set("/home/user/rakazo-home/.browser-profiles/chrome/Default/History", {
+    api.files(computer.id).set("/home/user/lumio-home/.browser-profiles/chrome/Default/History", {
       content,
       executable: false,
     });
-    api.files(computer.id).set("/home/user/rakazo-home/notes.txt", {
+    api.files(computer.id).set("/home/user/lumio-home/notes.txt", {
       content: Buffer.from("small"),
       executable: false,
     });
@@ -952,7 +952,7 @@ describe("BoatSandboxProvider", () => {
     expect(Buffer.from(exported[0]!.content).equals(content)).toBe(true);
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(artifactRaw).toHaveBeenCalledExactlyOnceWith(
-      { sandboxId: computer.id, path: "/home/user/rakazo-home/notes.txt" },
+      { sandboxId: computer.id, path: "/home/user/lumio-home/notes.txt" },
       { signal: context.signal },
     );
   });
@@ -960,7 +960,7 @@ describe("BoatSandboxProvider", () => {
   it("downloads a file the artifact route could not send before Boat's proxy timed out", async () => {
     const artifactRaw = vi.spyOn(FakeBoatApi.prototype, "artifactRaw");
     const { api, provider, computer } = await boat();
-    api.files(computer.id).set("/home/user/rakazo-home/report.pdf", {
+    api.files(computer.id).set("/home/user/lumio-home/report.pdf", {
       content: Buffer.from("slow but small"),
       executable: false,
     });
@@ -1003,8 +1003,8 @@ describe("BoatSandboxProvider", () => {
     const large = Buffer.alloc(BOAT_ARTIFACT_MAX_BYTES + 1, 0xcd);
     large[0] = 0;
     const files = api.files(computer.id);
-    files.set("/home/user/rakazo-home/data/archive.bin", { content: large, executable: true });
-    files.set("/home/user/rakazo-home/notes.txt", {
+    files.set("/home/user/lumio-home/data/archive.bin", { content: large, executable: true });
+    files.set("/home/user/lumio-home/notes.txt", {
       content: Buffer.from("kept"),
       executable: false,
     });
@@ -1030,7 +1030,7 @@ describe("BoatSandboxProvider", () => {
     const { api, provider, computer } = await boat();
     const files = api.files(computer.id);
     for (const name of ["a", "b", "c"]) {
-      files.set(`/home/user/rakazo-home/${name}.bin`, {
+      files.set(`/home/user/lumio-home/${name}.bin`, {
         content: Buffer.alloc(40 * 1024 * 1024),
         executable: false,
       });
@@ -1054,7 +1054,7 @@ describe("BoatSandboxProvider", () => {
   it("refuses a capped read of a file over the artifact limit without downloading it", async () => {
     const download = vi.spyOn(FakeBoatApi.prototype, "createDownloadUrl");
     const { api, provider, computer } = await boat();
-    api.files(computer.id).set("/home/user/rakazo-home/large.bin", {
+    api.files(computer.id).set("/home/user/lumio-home/large.bin", {
       content: Buffer.alloc(BOAT_ARTIFACT_MAX_BYTES + 1),
       executable: false,
     });
@@ -1080,7 +1080,7 @@ describe("BoatSandboxProvider", () => {
       return { ...(await mint.call(this, request)), ...override } as FileUrlResponse;
     });
     const { api, provider, computer } = await boat();
-    api.files(computer.id).set("/home/user/rakazo-home/large.bin", {
+    api.files(computer.id).set("/home/user/lumio-home/large.bin", {
       content: Buffer.alloc(BOAT_ARTIFACT_MAX_BYTES + 1),
       executable: false,
     });
@@ -1098,7 +1098,7 @@ describe("BoatSandboxProvider", () => {
     "fails downloads without exposing signed URLs or response bodies (%s)",
     async (failure) => {
       const { api, provider, computer } = await boat();
-      api.files(computer.id).set("/home/user/rakazo-home/large.bin", {
+      api.files(computer.id).set("/home/user/lumio-home/large.bin", {
         content: Buffer.alloc(BOAT_ARTIFACT_MAX_BYTES + 1),
         executable: false,
       });
@@ -1151,8 +1151,8 @@ describe("BoatSandboxProvider", () => {
   it("accepts empty files and files exactly at the download limit", async () => {
     const { api, provider, computer } = await boat();
     const files = api.files(computer.id);
-    files.set("/home/user/rakazo-home/empty.bin", { content: new Uint8Array(), executable: false });
-    files.set("/home/user/rakazo-home/exact.bin", {
+    files.set("/home/user/lumio-home/empty.bin", { content: new Uint8Array(), executable: false });
+    files.set("/home/user/lumio-home/exact.bin", {
       content: Uint8Array.from([0, 255]),
       executable: false,
     });

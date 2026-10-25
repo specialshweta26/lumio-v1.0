@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { aliasLegacyProductEnv, loadRootEnv } from "./load-root-env.js";
+import { loadRootEnv } from "./load-root-env.js";
 
 let root: string;
 beforeEach(() => {
@@ -45,19 +45,5 @@ describe("root environment loading", () => {
     vi.stubEnv("NODE_ENV", "test");
     loadRootEnv({ allowInTests: true });
     expect(process.env.LUMIO_TEST_ENV_SENTINEL).toBe("fixture");
-  });
-
-  it("mirrors LUMIO_* values onto RAKAZO_* when the previous name is unset", () => {
-    const env: NodeJS.ProcessEnv = { LUMIO_HOST: "lumio.example" };
-    aliasLegacyProductEnv(env);
-    expect(env.LUMIO_HOST).toBe("lumio.example");
-    expect(env.RAKAZO_HOST).toBe("lumio.example");
-  });
-
-  it("mirrors RAKAZO_* values onto LUMIO_* without overwriting a set name", () => {
-    const env: NodeJS.ProcessEnv = { RAKAZO_HOST: "legacy.example", LUMIO_HOST: "lumio.example" };
-    aliasLegacyProductEnv(env);
-    expect(env.LUMIO_HOST).toBe("lumio.example");
-    expect(env.RAKAZO_HOST).toBe("legacy.example");
   });
 });

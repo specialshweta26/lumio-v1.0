@@ -6,9 +6,8 @@ import { Pool } from "pg";
 import { withContentEncryption } from "./content-encryption.js";
 import {
   ContentKeyRing,
-  LocalKeyProvider,
   lazyKeyProvider,
-  masterKeysFromEnv,
+  localKeyProviderFromEnv,
   PgSpaceKeyStore,
 } from "./content-keys.js";
 import { PrismaClient } from "./generated/prisma/client.js";
@@ -81,7 +80,7 @@ export function createDb(
     await end();
   }) as Pool["end"];
   const contentKeys = new ContentKeyRing(
-    options.keyProvider ?? lazyKeyProvider(() => new LocalKeyProvider(masterKeysFromEnv())),
+    options.keyProvider ?? lazyKeyProvider(() => localKeyProviderFromEnv()),
     new PgSpaceKeyStore(keyPool),
     { encryptWrites },
   );

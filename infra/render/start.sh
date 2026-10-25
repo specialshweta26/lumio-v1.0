@@ -23,10 +23,8 @@ export CONTENT_ENCRYPTION="${CONTENT_ENCRYPTION:-on}"
 if [[ -n "$public_url" ]]; then
   export BETTER_AUTH_URL="${BETTER_AUTH_URL:-$public_url}"
   export WEB_ORIGIN="${WEB_ORIGIN:-$public_url}"
-  export LUMIO_HOST="${LUMIO_HOST:-${RAKAZO_HOST:-$host}}"
-  export LUMIO_ALLOWED_HOSTS="${LUMIO_ALLOWED_HOSTS:-${RAKAZO_ALLOWED_HOSTS:-$host}}"
-  export RAKAZO_HOST="${RAKAZO_HOST:-$LUMIO_HOST}"
-  export RAKAZO_ALLOWED_HOSTS="${RAKAZO_ALLOWED_HOSTS:-$LUMIO_ALLOWED_HOSTS}"
+  export LUMIO_HOST="${LUMIO_HOST:-$host}"
+  export LUMIO_ALLOWED_HOSTS="${LUMIO_ALLOWED_HOSTS:-$host}"
 fi
 
 mkdir -p "$DATA_DIR"

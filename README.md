@@ -94,6 +94,8 @@ covers the Caddy setup and host hardening. In the desktop app choose **Existing 
 the `https://` address.
 
 Or [deploy on Railway](https://railway.com/new/template/lumio-template); see the [Railway setup guide](./infra/railway/README.md).
+On Render, use `infra/render/Dockerfile` and only the variables in
+[infra/render/.env.example](./infra/render/.env.example).
 
 ## Local development (source checkout)
 

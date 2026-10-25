@@ -978,7 +978,7 @@ Native file reads and workspace exports are limited to 8 MiB per file. A larger 
   `https://api.sb.createos.sh`, `s-2vcpu-2gb`, and `desktop:1`.
 - **Boat** provides a managed Linux desktop through `BOAT_API_KEY` and optionally
   `BOAT_API_URL`. Lumio always creates or resumes sandboxes with `noEnv: true`, keeps the portable
-  workspace under `/home/user/rakazo-home`, and refreshes a two-hour TTL. Boat uses the shared Linux
+  workspace under `/home/user/lumio-home`, and refreshes a two-hour TTL. Boat uses the shared Linux
   desktop runtime and protected port routes for concurrent bot desktops. Each bot has its own
   persistent Chrome profile; logins are not shared between bots.
 - **Local computer access** in the app-managed Electron instance runs commands on Windows, macOS,

@@ -29,7 +29,8 @@ import { LinuxDesktop, PREPARE_LINUX_DESKTOP } from "./linux-desktop.js";
 import { sandboxCommandArgv } from "./sandbox-command-environment.js";
 import { isSandboxGoneError } from "./sandbox-errors.js";
 
-const E2B_WORKSPACE = "/home/user/rakazo-home";
+const E2B_WORKSPACE = "/home/user/lumio-home";
+const PREVIOUS_E2B_WORKSPACE = "/home/user/rakazo-home";
 const E2B_BROWSER_PROFILES = `${E2B_WORKSPACE}/.browser-profiles`;
 
 /** The part of an E2B desktop sandbox handle this adapter uses. */
@@ -293,8 +294,11 @@ export class E2BSandboxProvider implements SandboxProvider {
   }
 
   async prepare(computer: ComputerRef, context: AdapterContext): Promise<void> {
-    if (computer.fresh) await this.use(computer, (desktop) => desktop.files.makeDir(E2B_WORKSPACE));
-    const result = await this.runSetupCommand(computer, PREPARE_LINUX_DESKTOP, context.signal);
+    const result = await this.runSetupCommand(
+      computer,
+      `${ensureE2BWorkspaceCommand()} && ${PREPARE_LINUX_DESKTOP}`,
+      context.signal,
+    );
     if (result.exitCode !== 0)
       throw new Error(result.stderr || "could not prepare computer desktop tools");
   }
@@ -634,6 +638,15 @@ async function* walkE2BWorkspace(
   for (const relative of directories) yield* walkE2BWorkspace(desktop, relative, context);
 }
 
+function ensureE2BWorkspaceCommand(): string {
+  return [
+    `if [ -d ${shellQuote(PREVIOUS_E2B_WORKSPACE)} ] && [ ! -e ${shellQuote(E2B_WORKSPACE)} ]; then`,
+    ` mv ${shellQuote(PREVIOUS_E2B_WORKSPACE)} ${shellQuote(E2B_WORKSPACE)};`,
+    " fi &&",
+    ` mkdir -p ${shellQuote(E2B_WORKSPACE)}`,
+  ].join("");
+}
+
 function e2bCwd(cwd: string | undefined): string {
   if (
     !cwd ||
@@ -642,17 +655,20 @@ function e2bCwd(cwd: string | undefined): string {
     cwd === "/home/lumio" ||
     cwd === "/home/rakazo" ||
     cwd === "/home/user" ||
-    cwd === E2B_WORKSPACE
+    cwd === E2B_WORKSPACE ||
+    cwd === PREVIOUS_E2B_WORKSPACE
   ) {
     return E2B_WORKSPACE;
   }
   const relative = cwd.startsWith(`${E2B_WORKSPACE}/`)
     ? cwd.slice(E2B_WORKSPACE.length + 1)
-    : cwd.startsWith("/home/lumio/")
-      ? cwd.slice("/home/lumio/".length)
-      : cwd.startsWith("/home/rakazo/")
-        ? cwd.slice("/home/rakazo/".length)
-        : cwd;
+    : cwd.startsWith(`${PREVIOUS_E2B_WORKSPACE}/`)
+      ? cwd.slice(PREVIOUS_E2B_WORKSPACE.length + 1)
+      : cwd.startsWith("/home/lumio/")
+        ? cwd.slice("/home/lumio/".length)
+        : cwd.startsWith("/home/rakazo/")
+          ? cwd.slice("/home/rakazo/".length)
+          : cwd;
   return workspacePath(E2B_WORKSPACE, relative);
 }
 

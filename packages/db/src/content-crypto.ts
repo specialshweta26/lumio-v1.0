@@ -1,19 +1,20 @@
 import { createCipheriv, createDecipheriv, createHmac, hkdfSync, randomBytes } from "node:crypto";
 
 /**
- * Versioned content ciphertext: `rkz1:<space key id>:<base64url(iv | ciphertext | tag)>`.
+ * Versioned content ciphertext: `lum1:<space key id>:<base64url(iv | ciphertext | tag)>`.
  * AES-256-GCM with a fresh 96-bit IV per value. The AAD binds the table, column,
  * row id, the row's owner (thread, document or user) and the key's space, so a
  * value copied, or a row moved, anywhere else fails authentication.
  */
-export const CIPHERTEXT_PREFIX = "rkz1:";
+export const CIPHERTEXT_PREFIX = "lum1:";
+const HISTORICAL_CIPHERTEXT_PREFIX = "rkz1:";
 /** JSON values keep query-relevant scalar keys beside the sealed original. */
 export const SEALED_FIELD = "$sealed";
 
 const IV_BYTES = 12;
 const TAG_BYTES = 16;
-/** Wire format: keep the original label so existing sealed rows still open. */
-const AAD_VERSION = "rakazo/content/v1";
+const AAD_VERSION = "lumio/content/v1";
+const HISTORICAL_AAD_VERSION = "rakazo/content/v1";
 
 export interface DataKey {
   /** SpaceKey row id; travels in every ciphertext header. */
@@ -38,12 +39,17 @@ export class ContentDecryptionError extends Error {
   }
 }
 
-function contentAad(location: ContentLocation, spaceId: string): Buffer {
+function contentAad(location: ContentLocation, spaceId: string, version = AAD_VERSION): Buffer {
   return Buffer.from(
-    [AAD_VERSION, location.table, location.column, location.rowId, location.owner, spaceId].join(
-      "\0",
-    ),
+    [version, location.table, location.column, location.rowId, location.owner, spaceId].join("\0"),
   );
+}
+
+function ciphertextPrefixOf(
+  value: string,
+): typeof CIPHERTEXT_PREFIX | typeof HISTORICAL_CIPHERTEXT_PREFIX | undefined {
+  if (value.startsWith(CIPHERTEXT_PREFIX)) return CIPHERTEXT_PREFIX;
+  if (value.startsWith(HISTORICAL_CIPHERTEXT_PREFIX)) return HISTORICAL_CIPHERTEXT_PREFIX;
 }
 
 export function isCiphertext(value: unknown): value is string {
@@ -51,9 +57,11 @@ export function isCiphertext(value: unknown): value is string {
 }
 
 export function ciphertextKeyId(value: unknown): string | undefined {
-  if (typeof value !== "string" || !value.startsWith(CIPHERTEXT_PREFIX)) return;
-  const end = value.indexOf(":", CIPHERTEXT_PREFIX.length);
-  return end > CIPHERTEXT_PREFIX.length ? value.slice(CIPHERTEXT_PREFIX.length, end) : undefined;
+  if (typeof value !== "string") return;
+  const prefix = ciphertextPrefixOf(value);
+  if (!prefix) return;
+  const end = value.indexOf(":", prefix.length);
+  return end > prefix.length ? value.slice(prefix.length, end) : undefined;
 }
 
 export function encryptText(key: DataKey, location: ContentLocation, plaintext: string): string {
@@ -66,21 +74,28 @@ export function encryptText(key: DataKey, location: ContentLocation, plaintext: 
 }
 
 export function decryptText(key: DataKey, location: ContentLocation, value: string): string {
+  const prefix = ciphertextPrefixOf(value);
   const keyId = ciphertextKeyId(value);
-  if (keyId !== key.id) throw new ContentDecryptionError("Encrypted content names another key");
-  const body = Buffer.from(value.slice(CIPHERTEXT_PREFIX.length + keyId.length + 1), "base64url");
+  if (!prefix || keyId !== key.id)
+    throw new ContentDecryptionError("Encrypted content names another key");
+  const body = Buffer.from(value.slice(prefix.length + keyId.length + 1), "base64url");
   if (body.length < IV_BYTES + TAG_BYTES) throw new ContentDecryptionError();
-  try {
-    const decipher = createDecipheriv("aes-256-gcm", key.key, body.subarray(0, IV_BYTES));
-    decipher.setAAD(contentAad(location, key.spaceId));
-    decipher.setAuthTag(body.subarray(body.length - TAG_BYTES));
-    return Buffer.concat([
-      decipher.update(body.subarray(IV_BYTES, body.length - TAG_BYTES)),
-      decipher.final(),
-    ]).toString("utf8");
-  } catch {
-    throw new ContentDecryptionError();
+  const versions = [AAD_VERSION];
+  if (prefix === HISTORICAL_CIPHERTEXT_PREFIX) versions.push(HISTORICAL_AAD_VERSION);
+  for (const version of versions) {
+    try {
+      const decipher = createDecipheriv("aes-256-gcm", key.key, body.subarray(0, IV_BYTES));
+      decipher.setAAD(contentAad(location, key.spaceId, version));
+      decipher.setAuthTag(body.subarray(body.length - TAG_BYTES));
+      return Buffer.concat([
+        decipher.update(body.subarray(IV_BYTES, body.length - TAG_BYTES)),
+        decipher.final(),
+      ]).toString("utf8");
+    } catch {
+      continue;
+    }
   }
+  throw new ContentDecryptionError();
 }
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
@@ -148,8 +163,11 @@ export type SearchTokenDomain = "word" | "prefix";
 const MAX_PREFIX = 10;
 const MIN_PREFIX = 2;
 
-function searchKey(key: DataKey): Buffer {
-  return Buffer.from(hkdfSync("sha256", key.key, Buffer.alloc(0), "rakazo/search/v1", 32));
+const SEARCH_INFO = "lumio/search/v1";
+const HISTORICAL_SEARCH_INFO = "rakazo/search/v1";
+
+function searchKey(key: DataKey, info = SEARCH_INFO): Buffer {
+  return Buffer.from(hkdfSync("sha256", key.key, Buffer.alloc(0), info, 32));
 }
 
 export function searchTerms(text: string): string[] {
@@ -178,6 +196,14 @@ export function searchTokens(key: DataKey, input: { words: string; strings: stri
   return [...tokens].sort((a, b) => a - b);
 }
 
+function tokensForQuery(hmacKey: Buffer, query: string, domain: SearchTokenDomain): number[] {
+  const terms = searchTerms(query);
+  if (domain === "word") return terms.map((term) => token(hmacKey, "word", term));
+  return terms
+    .filter((term) => term.length >= MIN_PREFIX)
+    .map((term) => token(hmacKey, "prefix", term.slice(0, MAX_PREFIX)));
+}
+
 /**
  * Tokens every match must contain. Prefix queries use each term's indexed prefix;
  * terms shorter than the minimum prefix cannot be indexed and return none.
@@ -187,12 +213,18 @@ export function querySearchTokens(
   query: string,
   domain: SearchTokenDomain,
 ): number[] {
-  const hmacKey = searchKey(key);
-  const terms = searchTerms(query);
-  if (domain === "word") return terms.map((term) => token(hmacKey, "word", term));
-  return terms
-    .filter((term) => term.length >= MIN_PREFIX)
-    .map((term) => token(hmacKey, "prefix", term.slice(0, MAX_PREFIX)));
+  return tokensForQuery(searchKey(key), query, domain);
+}
+
+/** Current and previous search labels, so already-indexed rows still match. */
+export function querySearchTokenSets(
+  key: DataKey,
+  query: string,
+  domain: SearchTokenDomain,
+): number[][] {
+  return [SEARCH_INFO, HISTORICAL_SEARCH_INFO].map((info) =>
+    tokensForQuery(searchKey(key, info), query, domain),
+  );
 }
 
 // Artifact files: a header naming the key, then 64 KiB AES-GCM segments. Each
@@ -200,15 +232,23 @@ export function querySearchTokens(
 // the header, space, file id and whether the segment is final, so reordering,
 // truncation and splicing between files all fail authentication.
 
-const ARTIFACT_MAGIC = Buffer.from("RKZA\x01", "latin1");
+const ARTIFACT_MAGIC = Buffer.from("LUMA\x01", "latin1");
+const HISTORICAL_ARTIFACT_MAGIC = Buffer.from("RKZA\x01", "latin1");
 const ARTIFACT_CHUNK = 64 * 1024;
 const NONCE_PREFIX_BYTES = 8;
 
+function artifactMagicOf(head: Uint8Array): Buffer | undefined {
+  for (const magic of [ARTIFACT_MAGIC, HISTORICAL_ARTIFACT_MAGIC]) {
+    if (
+      head.length >= magic.length &&
+      Buffer.from(head.subarray(0, magic.length)).equals(magic)
+    )
+      return magic;
+  }
+}
+
 export function isSealedArtifact(head: Uint8Array): boolean {
-  return (
-    head.length >= ARTIFACT_MAGIC.length &&
-    Buffer.from(head.subarray(0, ARTIFACT_MAGIC.length)).equals(ARTIFACT_MAGIC)
-  );
+  return artifactMagicOf(head) !== undefined;
 }
 
 function segmentCrypto(header: Buffer, prefix: Buffer, spaceId: string, fileId: string) {
@@ -270,9 +310,10 @@ export async function* sealArtifact(
 }
 
 export function artifactKeyId(head: Uint8Array): string | undefined {
-  if (!isSealedArtifact(head) || head.length < ARTIFACT_MAGIC.length + 1) return;
-  const length = head[ARTIFACT_MAGIC.length]!;
-  const start = ARTIFACT_MAGIC.length + 1;
+  const magic = artifactMagicOf(head);
+  if (!magic || head.length < magic.length + 1) return;
+  const length = head[magic.length]!;
+  const start = magic.length + 1;
   if (head.length < start + length) return;
   return Buffer.from(head.subarray(start, start + length)).toString("utf8");
 }
@@ -305,14 +346,14 @@ export async function* openArtifact(
   for await (const chunk of source) {
     pending = pending.length ? Buffer.concat([pending, chunk]) : Buffer.from(chunk);
     if (!crypto) {
+      const magic = artifactMagicOf(pending);
       const keyId = artifactKeyId(pending);
-      if (keyId === undefined) {
+      if (keyId === undefined || !magic) {
         if (pending.length >= ARTIFACT_MAGIC.length + 1 + 255 + NONCE_PREFIX_BYTES)
           throw new ContentDecryptionError("Encrypted artifact header is malformed");
         continue;
       }
-      const headerLength =
-        ARTIFACT_MAGIC.length + 1 + Buffer.byteLength(keyId) + NONCE_PREFIX_BYTES;
+      const headerLength = magic.length + 1 + Buffer.byteLength(keyId) + NONCE_PREFIX_BYTES;
       if (pending.length < headerLength) continue;
       key = await keyFor(keyId);
       if (key.id !== keyId)

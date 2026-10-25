@@ -1,4 +1,4 @@
-import { randomBytes } from "node:crypto";
+import { createCipheriv, randomBytes } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import type { DataKey } from "./content-crypto.js";
 import {
@@ -35,9 +35,24 @@ describe("content ciphertext", () => {
     const first = encryptText(key, location, "hello");
     const second = encryptText(key, location, "hello");
     expect(first).not.toBe(second);
-    expect(first.startsWith("rkz1:key-1:")).toBe(true);
+    expect(first.startsWith("lum1:key-1:")).toBe(true);
     expect(ciphertextKeyId(first)).toBe("key-1");
     expect(decryptText(key, location, first)).toBe("hello");
+  });
+
+  it("opens values sealed under the previous product labels", () => {
+    const iv = randomBytes(12);
+    const cipher = createCipheriv("aes-256-gcm", key.key, iv);
+    cipher.setAAD(
+      Buffer.from(
+        ["rakazo/content/v1", location.table, location.column, location.rowId, location.owner, key.spaceId].join(
+          "\0",
+        ),
+      ),
+    );
+    const enc = Buffer.concat([cipher.update("hello", "utf8"), cipher.final()]);
+    const sealed = `rkz1:${key.id}:${Buffer.concat([iv, enc, cipher.getAuthTag()]).toString("base64url")}`;
+    expect(decryptText(key, location, sealed)).toBe("hello");
   });
 
   it("fails authentication when moved to another table, column, row or space", () => {
@@ -159,5 +174,9 @@ describe("artifact stream", () => {
 
   it("does not treat plaintext as sealed", () => {
     expect(isSealedArtifact(Buffer.from("%PDF-1.7"))).toBe(false);
+  });
+
+  it("recognizes artifacts sealed under the previous magic", () => {
+    expect(isSealedArtifact(Buffer.from("RKZA\x01"))).toBe(true);
   });
 });

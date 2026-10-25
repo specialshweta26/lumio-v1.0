@@ -5,7 +5,6 @@ export const SITE_DESCRIPTION =
 
 export const APP_URL = "https://app.lumio.com";
 export const GITHUB_URL = "https://github.com/specialshweta26/lumio-v1.0";
-export const IOS_APP_URL = "https://apps.apple.com/app/lumio/id6801531099";
 export const ANDROID_APK_URL = "https://github.com/specialshweta26/lumio-v1.0/releases/download/android/lumio.apk";
 export const GITHUB_API_REPO = "https://api.github.com/repos/specialshweta26/lumio-v1.0";
 export const DOCS_URL = "https://github.com/specialshweta26/lumio-v1.0/blob/main/docs/self-host.md";

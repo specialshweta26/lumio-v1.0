@@ -102,7 +102,7 @@ describePostgres("content encryption (PostgreSQL)", () => {
       const stored = await rawBlocks(message.id);
       expect(stored).not.toContain("MARIGOLD");
       expect(stored).not.toContain("Friday");
-      expect(stored).toContain("rkz1:");
+      expect(stored).toContain("lum1:");
       const found = await prisma.message.findMany({
         where: {
           threadId,
@@ -280,7 +280,7 @@ describePostgres("content encryption (PostgreSQL)", () => {
             threadId,
           ])
         ).rows[0].s,
-      ).toMatch(/^rkz1:/);
+      ).toMatch(/^lum1:/);
       expect(
         (await prisma.thread.findUnique({ where: { id: threadId } }))?.historyCompactionSummary,
       ).toBe("They discussed the wombat budget");
@@ -343,10 +343,10 @@ describePostgres("content encryption (PostgreSQL)", () => {
         /Master key test-b is not configured/,
       );
 
-      const before = (await rawBlocks(message.id)).match(/rkz1:([^:]+):/)![1];
+      const before = (await rawBlocks(message.id)).match(/lum1:([^:]+):/)![1];
       await rotateSpaceDataKeys(onlyB.prisma, contentEncryptionOf(onlyB.prisma)!.ring);
       await migrateContent(onlyB.prisma, { mode: "reencrypt" });
-      const afterKey = (await rawBlocks(message.id)).match(/rkz1:([^:]+):/)![1];
+      const afterKey = (await rawBlocks(message.id)).match(/lum1:([^:]+):/)![1];
       expect(afterKey).not.toBe(before);
       const versions = await raw.query(
         `SELECT count(*)::int AS n FROM space_keys WHERE "spaceId" = $1`,
@@ -362,7 +362,7 @@ describePostgres("content encryption (PostgreSQL)", () => {
       const db = client([masterB]);
       await migrateContent(db.prisma, { mode: "decrypt" });
       const stored = await raw.query(
-        `SELECT count(*)::int AS n FROM messages WHERE "threadId" = $1 AND blocks::text LIKE '%rkz1:%'`,
+        `SELECT count(*)::int AS n FROM messages WHERE "threadId" = $1 AND blocks::text LIKE '%lum1:%'`,
         [threadId],
       );
       expect(stored.rows[0].n).toBe(0);
@@ -553,6 +553,7 @@ describePostgres("content encryption (PostgreSQL)", () => {
           "narwhal four, plaintext beside ciphertext",
         ]);
         expect(byThread.some((record) => record.type === "memory_document")).toBe(false);
+        expect(JSON.stringify(byThread)).not.toContain("lum1:");
         expect(JSON.stringify(byThread)).not.toContain("rkz1:");
 
         const bySpace = await collect({ spaceId: switchSpaceId });
@@ -575,6 +576,7 @@ describePostgres("content encryption (PostgreSQL)", () => {
           content: "Likes kelp",
           spaceId: switchSpaceId,
         });
+        expect(JSON.stringify(bySpace)).not.toContain("lum1:");
         expect(JSON.stringify(bySpace)).not.toContain("rkz1:");
         expect(await collect({ botId: switchBotId })).toEqual(bySpace);
         expect(await collect({ botId: `missing-${suffix}` })).toEqual([]);

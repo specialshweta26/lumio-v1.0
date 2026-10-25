@@ -6,7 +6,7 @@ import {
   encryptText,
   jsonKeyIds,
   openJson,
-  querySearchTokens,
+  querySearchTokenSets,
   sealJson,
   searchTokens,
 } from "./content-crypto.js";
@@ -140,8 +140,8 @@ export interface ContentEncryption {
    */
   openRows<T extends { id: string }>(model: keyof typeof ENCRYPTED_MODELS, rows: T[]): Promise<T[]>;
   /**
-   * One token list per key version of the space; a match must contain every token
-   * of one list. Empty when the space has no keys, so it has no encrypted rows.
+   * One token list per key version and search label of the space; a match must
+   * contain every token of one list. Empty when the space has no keys.
    */
   messageSearchTokens(
     spaceId: string,
@@ -494,7 +494,7 @@ export function withContentEncryption(prisma: PrismaClient, ring: ContentKeyRing
     },
     async messageSearchTokens(spaceId, query, domain) {
       const keys = await ring.allFresh(spaceId);
-      return keys.map((key) => querySearchTokens(key, query, domain));
+      return keys.flatMap((key) => querySearchTokenSets(key, query, domain));
     },
   };
 

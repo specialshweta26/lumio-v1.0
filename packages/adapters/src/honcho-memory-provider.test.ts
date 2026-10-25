@@ -43,7 +43,7 @@ function honchoFetch(
         fact.observed_id === observed,
     );
   const conclusion = ({ workspace: _workspace, ...fact }: (typeof facts)[number]) => fact;
-  const peers = new Set(["rakazo-shared", "bot-bot-1", "bot-bot-2"]);
+  const peers = new Set(["lumio-shared", "bot-bot-1", "bot-bot-2"]);
   const readable = new Set([...peers, ...readOnlyPeers]);
   return vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
     const path = new URL(String(url)).pathname;
@@ -72,7 +72,7 @@ function honchoFetch(
       expect(body).toEqual({
         query: expect.any(String),
         top_k: expect.any(Number),
-        filters: { observer_id: expect.any(String), observed_id: "rakazo-shared" },
+        filters: { observer_id: expect.any(String), observed_id: "lumio-shared" },
       });
       const found = factsIn(workspace!, body.filters.observer_id, body.filters.observed_id);
       return Response.json(found.slice(0, body.top_k).map(conclusion));
@@ -85,7 +85,7 @@ function honchoFetch(
         query: expect.any(String),
         reasoning_level: "low",
         stream: false,
-        ...(peer === "rakazo-shared" || !peers.has(peer) ? {} : { target: "rakazo-shared" }),
+        ...(peer === "lumio-shared" || !peers.has(peer) ? {} : { target: "lumio-shared" }),
       });
       if (chatAnswers) {
         if (!Object.hasOwn(chatAnswers, peer)) throw new Error(`Unexpected chat: ${path}`);
@@ -108,7 +108,7 @@ function honchoFetch(
         expect(conclusion).toEqual({
           content: expect.any(String),
           observer_id: expect.any(String),
-          observed_id: "rakazo-shared",
+          observed_id: "lumio-shared",
         });
         expect(peers.has(conclusion.observer_id)).toBe(true);
         facts.push({ id: `conclusion-${facts.length + 1}`, workspace: workspace!, ...conclusion });
@@ -141,7 +141,7 @@ function calls(fetchMock: ReturnType<typeof honchoFetch>) {
 describe("HonchoMemoryProvider", () => {
   it("saves shared facts for the Space and the bot, then recalls through peer chat", async () => {
     const fetchMock = honchoFetch({
-      "rakazo-shared": "The user's favorite color is teal.",
+      "lumio-shared": "The user's favorite color is teal.",
       "bot-bot-1": "NO_RELEVANT_MEMORY",
     });
     const memory = provider(fetchMock);
@@ -170,20 +170,20 @@ describe("HonchoMemoryProvider", () => {
           {
             content: "Favorite color is teal",
             observer_id: "bot-bot-1",
-            observed_id: "rakazo-shared",
+            observed_id: "lumio-shared",
           },
           {
             content: "Favorite color is teal",
-            observer_id: "rakazo-shared",
-            observed_id: "rakazo-shared",
+            observer_id: "lumio-shared",
+            observed_id: "lumio-shared",
           },
         ],
       },
     });
     const chats = calls(fetchMock).filter((call) => call.path.endsWith("/chat"));
     expect(chats.map((call) => [call.path, call.body.target])).toEqual([
-      ["/v3/workspaces/lumio-space-1/peers/rakazo-shared/chat", undefined],
-      ["/v3/workspaces/lumio-space-1/peers/bot-bot-1/chat", "rakazo-shared"],
+      ["/v3/workspaces/lumio-space-1/peers/lumio-shared/chat", undefined],
+      ["/v3/workspaces/lumio-space-1/peers/bot-bot-1/chat", "lumio-shared"],
     ]);
     expect(recalled).toEqual({
       ok: true,
@@ -192,7 +192,7 @@ describe("HonchoMemoryProvider", () => {
           memory: "The user's favorite color is teal.",
           score: 1,
           provenance: "honcho",
-          entity: "rakazo-shared",
+          entity: "lumio-shared",
         },
         // The stored fact behind the answer carries the id forget_memory needs.
         {
@@ -200,7 +200,7 @@ describe("HonchoMemoryProvider", () => {
           score: 1,
           id: "conclusion-2",
           provenance: "honcho",
-          entity: "rakazo-shared",
+          entity: "lumio-shared",
         },
       ],
     });
@@ -221,7 +221,7 @@ describe("HonchoMemoryProvider", () => {
     // Bot B sees user 1's shared fact, but never bot A's private fact.
     expect(await memory.recall(recall, otherMember)).toMatchObject({
       ok: true,
-      value: [{ memory: "The Space uses teal", id: "conclusion-2", entity: "rakazo-shared" }],
+      value: [{ memory: "The Space uses teal", id: "conclusion-2", entity: "lumio-shared" }],
     });
     expect(await memory.recall({ ...recall, scope: "isolated" }, otherMember)).toEqual({
       ok: true,
@@ -242,7 +242,7 @@ describe("HonchoMemoryProvider", () => {
       });
       expect(await memory.recall(recall, { ...otherMember, userId })).toMatchObject({
         ok: true,
-        value: [{ memory: "The Space uses teal", id: "conclusion-2", entity: "rakazo-shared" }],
+        value: [{ memory: "The Space uses teal", id: "conclusion-2", entity: "lumio-shared" }],
       });
     }
     expect(
@@ -254,11 +254,11 @@ describe("HonchoMemoryProvider", () => {
     expect(await memory.recall({ ...recall, botId: "bot-1" }, context)).toMatchObject({
       ok: true,
       value: [
-        { memory: "The Space uses teal\nRoutine fact", entity: "rakazo-shared" },
+        { memory: "The Space uses teal\nRoutine fact", entity: "lumio-shared" },
         { memory: "The Space uses teal\nBot A's private fact", entity: "bot-bot-1" },
-        { memory: "The Space uses teal", id: "conclusion-2", entity: "rakazo-shared" },
+        { memory: "The Space uses teal", id: "conclusion-2", entity: "lumio-shared" },
         { memory: "Bot A's private fact", id: "conclusion-3", entity: "bot-bot-1" },
-        { memory: "Routine fact", id: "conclusion-5", entity: "rakazo-shared" },
+        { memory: "Routine fact", id: "conclusion-5", entity: "lumio-shared" },
       ],
     });
   });
@@ -294,7 +294,7 @@ describe("HonchoMemoryProvider", () => {
                 score: 1,
                 id: "conclusion-2",
                 provenance: "honcho",
-                entity: "rakazo-shared",
+                entity: "lumio-shared",
               },
             ]
           : [],
@@ -372,7 +372,7 @@ describe("existing Honcho user peer", () => {
     async (scope) => {
       const fetchMock = honchoFetch(
         {
-          "rakazo-shared": "NO_RELEVANT_MEMORY",
+          "lumio-shared": "NO_RELEVANT_MEMORY",
           "bot-bot-1": "NO_RELEVANT_MEMORY",
           "user-alex": "Prefers short morning briefings.",
         },
@@ -458,7 +458,7 @@ describe("shared recall deduplication", () => {
   it.each([1, 5])("keeps the first answer before applying limit %i", async (limit) => {
     const result = await provider(
       honchoFetch({
-        "rakazo-shared": "Favorite color is teal.",
+        "lumio-shared": "Favorite color is teal.",
         "bot-bot-1": "  FAVORITE  color\nis teal.  ",
       }),
     ).recall({ query: "color?", scope: "shared", botId: "bot-1", limit }, context);
@@ -469,7 +469,7 @@ describe("shared recall deduplication", () => {
           memory: "Favorite color is teal.",
           score: 1,
           provenance: "honcho",
-          entity: "rakazo-shared",
+          entity: "lumio-shared",
         },
       ],
     });
@@ -551,7 +551,7 @@ describe("prepareHonchoConnection", () => {
   it.each([
     [{ userPeerId: "user-alex" }, /requires the workspace/],
     [{ workspaceId: "existing-app", userPeerId: "bad peer" }, /userPeerId/],
-    [{ workspaceId: "existing-app", userPeerId: "rakazo-shared" }, /reserved/],
+    [{ workspaceId: "existing-app", userPeerId: "lumio-shared" }, /reserved/],
     [{ workspaceId: "existing-app", userPeerId: "bot-bot_1" }, /reserved/],
   ])("rejects an invalid user peer before probing", async (settings, error) => {
     const fetch = vi.fn(() => {
@@ -709,7 +709,7 @@ describe("Honcho forget", () => {
             id: "other-bot",
             content: "Prefers tea",
             observer_id: "bot-bot-2",
-            observed_id: "rakazo-shared",
+            observed_id: "lumio-shared",
           },
           {
             id: "user-fact",
@@ -767,9 +767,9 @@ describe("Honcho forget", () => {
   });
 
   it.each([
-    { id: "other-id", observer_id: "bot-bot-1", observed_id: "rakazo-shared" },
+    { id: "other-id", observer_id: "bot-bot-1", observed_id: "lumio-shared" },
     { id: "conclusion-1", observer_id: "bot-bot-1", observed_id: "user-peer" },
-    { id: "conclusion-1", observer_id: "user-peer", observed_id: "rakazo-shared" },
+    { id: "conclusion-1", observer_id: "user-peer", observed_id: "lumio-shared" },
   ])("rejects a lookup outside the requested id and peer scope: %o", async (fact) => {
     const fetch = vi.fn(async () => Response.json({ ...fact, content: "Private fact" }));
     await expect(
@@ -834,7 +834,7 @@ describe("Honcho forget", () => {
     ),
     [{ id: "conclusion-1", entity: "bot-bot-2" }, "That memory belongs to another bot or Space."],
     [
-      { id: "conclusion-1", entity: "rakazo-shared" },
+      { id: "conclusion-1", entity: "lumio-shared" },
       "That memory belongs to another bot or Space.",
     ],
   ] as const)("rejects %o before calling Honcho", async (request, error) => {
@@ -890,7 +890,7 @@ describe("Honcho scope and failures", () => {
   const recall = { query: "color?", scope: "shared" as const, botId: "bot-1", limit: 1 };
   it("applies the recall limit to distinct answers", async () => {
     const result = await provider(
-      honchoFetch({ "rakazo-shared": "First fact", "bot-bot-1": "Second fact" }),
+      honchoFetch({ "lumio-shared": "First fact", "bot-bot-1": "Second fact" }),
     ).recall(recall, context);
     expect(result).toMatchObject({ ok: true, value: [{ memory: "First fact" }] });
   });
@@ -903,7 +903,7 @@ describe("Honcho scope and failures", () => {
     );
     const saved = calls(fetch).find((call) => call.path.endsWith("/conclusions"));
     expect(saved?.body.conclusions).toEqual([
-      { content: "fact", observer_id: "bot-bot-1", observed_id: "rakazo-shared" },
+      { content: "fact", observer_id: "bot-bot-1", observed_id: "lumio-shared" },
     ]);
     await memory.recall({ ...recall, scope: "isolated" }, context);
     expect(calls(fetch).filter((call) => call.path.endsWith("/chat"))).toHaveLength(1);
@@ -923,7 +923,7 @@ describe("Honcho scope and failures", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
   it("keeps successful shared recall when another perspective fails", async () => {
-    const normal = honchoFetch({ "rakazo-shared": "A fact" });
+    const normal = honchoFetch({ "lumio-shared": "A fact" });
     const fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
       if (String(url).endsWith("/bot-bot-1/chat")) return new Response("", { status: 503 });
       return normal(url, init);

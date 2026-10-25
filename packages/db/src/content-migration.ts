@@ -302,12 +302,12 @@ export async function contentEncryptionStatus(
       WHEN 'array' THEN jsonb_array_length(payload) = 0 OR jsonb_exists(payload->0, '$sealed')
       ELSE false END) FROM events
     UNION ALL
-    SELECT 'memory_documents', count(*), count(*) FILTER (WHERE content NOT LIKE 'rkz1:%') FROM memory_documents
+    SELECT 'memory_documents', count(*), count(*) FILTER (WHERE content NOT LIKE 'lum1:%' AND content NOT LIKE 'rkz1:%') FROM memory_documents
     UNION ALL
-    SELECT 'memory_revisions', count(*), count(*) FILTER (WHERE content NOT LIKE 'rkz1:%') FROM memory_revisions
+    SELECT 'memory_revisions', count(*), count(*) FILTER (WHERE content NOT LIKE 'lum1:%' AND content NOT LIKE 'rkz1:%') FROM memory_revisions
     UNION ALL
     SELECT 'threads', count(*) FILTER (WHERE "historyCompactionSummary" IS NOT NULL),
-      count(*) FILTER (WHERE "historyCompactionSummary" NOT LIKE 'rkz1:%') FROM threads
+      count(*) FILTER (WHERE "historyCompactionSummary" NOT LIKE 'lum1:%' AND "historyCompactionSummary" NOT LIKE 'rkz1:%') FROM threads
   `;
   const keys = await prisma.spaceKey.groupBy({ by: ["masterKeyId"], _count: { _all: true } });
   return {

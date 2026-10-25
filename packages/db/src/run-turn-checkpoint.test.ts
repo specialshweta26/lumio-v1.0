@@ -49,7 +49,7 @@ describe("encrypted run turn checkpoint", () => {
       "unique-checkpoint-payload",
     );
     expect(state.stored()).not.toContain("unique-checkpoint-payload");
-    expect(state.stored()).toMatch(/^rkz1:/);
+    expect(state.stored()).toMatch(/^lum1:/);
     expect(await loadRunTurnCheckpoint(state.client, run)).toBe("unique-checkpoint-payload");
     await saveRunTurnCheckpoint(state.client, run, "fixture-worker", 1, "replacement");
     expect(await loadRunTurnCheckpoint(state.client, run)).toBe("replacement");

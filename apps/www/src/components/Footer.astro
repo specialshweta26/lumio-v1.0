@@ -16,7 +16,6 @@ import {
   CHANGELOG_URL,
   GITHUB_URL,
   INBOX_ZERO_URL,
-  IOS_APP_URL,
   SELF_HOST_GUIDE_PATH,
 } from "../site";
 import Logo from "./Logo.astro";
@@ -55,7 +54,6 @@ const columns: Array<{ heading: string; links: FooterLink[] }> = [
   {
     heading: linkLabels.product,
     links: [
-      { href: IOS_APP_URL, label: linkLabels.iosApp, external: true },
       { href: ANDROID_APK_URL, label: linkLabels.androidApp },
       { href: SELF_HOST_GUIDE_PATH, label: linkLabels.docs },
       { href: CHANGELOG_URL, label: linkLabels.changelog, external: true },

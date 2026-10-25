@@ -29,7 +29,6 @@ vi.mock("react-native", () => rn);
 vi.mock("./api", () => ({ configureClientBuild: vi.fn() }));
 vi.mock("./i18n", () => ({ t: (message: string) => message }));
 
-import { IOS_APP_STORE_URL } from "@lumio/contracts";
 import {
   clientBuildHeaders,
   FOREGROUND_UPDATE_CHECK_MS,
@@ -81,12 +80,12 @@ describe("update required", () => {
     expect(rn.Linking.openURL).not.toHaveBeenCalled();
   });
 
-  it("opens the store when no over-the-air update can fix it, and asks again next time", async () => {
+  it("does not send iOS to the previous App Store listing when no over-the-air update can fix it", async () => {
     noteClientUpdateRequired();
     pressUpdate();
     await flush();
     expect(updates.reloadAsync).not.toHaveBeenCalled();
-    expect(rn.Linking.openURL).toHaveBeenCalledWith(IOS_APP_STORE_URL);
+    expect(rn.Linking.openURL).not.toHaveBeenCalled();
     noteClientUpdateRequired();
     expect(rn.Alert.alert).toHaveBeenCalledTimes(2);
   });

@@ -13,6 +13,16 @@ export interface MasterKey {
 /** Master key id derived from ENCRYPTION_KEY when no explicit master keys are configured. */
 export const DERIVED_MASTER_KEY_ID = "env";
 const MASTER_KEY_ID = /^[A-Za-z0-9_-]{1,32}$/;
+const HKDF_SALT = Buffer.from("lumio");
+const HKDF_INFO = "lumio/content-master-key/v1";
+const WRAP_AAD_VERSION = "lumio/space-key/v1";
+const HISTORICAL_HKDF_SALT = Buffer.from("rakazo");
+const HISTORICAL_HKDF_INFO = "rakazo/content-master-key/v1";
+const HISTORICAL_WRAP_AAD_VERSION = "rakazo/space-key/v1";
+
+function deriveContentMasterKey(ikm: string, salt: Buffer, info: string): Buffer {
+  return Buffer.from(hkdfSync("sha256", Buffer.from(ikm, "utf8"), salt, info, 32));
+}
 
 function parseKeyMaterial(value: string): Buffer {
   const trimmed = value.trim();
@@ -32,16 +42,7 @@ function parseKeyMaterial(value: string): Buffer {
 export function masterKeysFromEnv(env: NodeJS.ProcessEnv = process.env): MasterKey[] {
   const derived: MasterKey = {
     id: DERIVED_MASTER_KEY_ID,
-    key: Buffer.from(
-      // HKDF labels are wire format for stored space keys. Do not rename them.
-      hkdfSync(
-        "sha256",
-        Buffer.from(resolveEncryptionKey(env), "utf8"),
-        Buffer.from("rakazo"),
-        "rakazo/content-master-key/v1",
-        32,
-      ),
-    ),
+    key: deriveContentMasterKey(resolveEncryptionKey(env), HKDF_SALT, HKDF_INFO),
   };
   const configured = (env.ENCRYPTION_MASTER_KEYS ?? "")
     .split(",")
@@ -59,17 +60,30 @@ export function masterKeysFromEnv(env: NodeJS.ProcessEnv = process.env): MasterK
   return [...configured, derived];
 }
 
-function wrapAad(context: KeyWrapContext): Buffer {
-  return Buffer.from(`rakazo/space-key/v1\0${context.spaceId}\0${context.version}`);
+function wrapAad(context: KeyWrapContext, version = WRAP_AAD_VERSION): Buffer {
+  return Buffer.from(`${version}\0${context.spaceId}\0${context.version}`);
+}
+
+/** Master keys from the environment, plus the previous product labels for unwrap. */
+export function localKeyProviderFromEnv(env: NodeJS.ProcessEnv = process.env): LocalKeyProvider {
+  const ikm = resolveEncryptionKey(env);
+  return new LocalKeyProvider(masterKeysFromEnv(env), {
+    historicalEnvKey: deriveContentMasterKey(ikm, HISTORICAL_HKDF_SALT, HISTORICAL_HKDF_INFO),
+  });
 }
 
 /** Default provider: AES-256-GCM key wrapping under master keys held in process memory. */
 export class LocalKeyProvider implements KeyProvider {
   private readonly keys: Map<string, Uint8Array>;
+  private readonly historicalEnvKey: Uint8Array | undefined;
 
-  constructor(private readonly masterKeys: MasterKey[]) {
+  constructor(
+    private readonly masterKeys: MasterKey[],
+    options: { historicalEnvKey?: Uint8Array } = {},
+  ) {
     if (!masterKeys.length) throw new Error("At least one master key is required");
     this.keys = new Map(masterKeys.map((key) => [key.id, key.key]));
+    this.historicalEnvKey = options.historicalEnvKey;
   }
 
   describe() {
@@ -99,19 +113,32 @@ export class LocalKeyProvider implements KeyProvider {
 
   async unwrap(wrapped: WrappedDataKey, context: KeyWrapContext): Promise<Uint8Array> {
     const master = this.keys.get(wrapped.masterKeyId);
-    if (!master) throw new Error(`Master key ${wrapped.masterKeyId} is not configured`);
-    const body = Buffer.from(wrapped.wrappedKey, "base64url");
-    try {
-      const decipher = createDecipheriv("aes-256-gcm", master, body.subarray(0, 12));
-      decipher.setAAD(wrapAad(context));
-      decipher.setAuthTag(body.subarray(body.length - 16));
-      return Buffer.concat([
-        decipher.update(body.subarray(12, body.length - 16)),
-        decipher.final(),
-      ]);
-    } catch {
-      throw new Error(`Space key could not be unwrapped with master key ${wrapped.masterKeyId}`);
+    if (!master && !(wrapped.masterKeyId === DERIVED_MASTER_KEY_ID && this.historicalEnvKey)) {
+      throw new Error(`Master key ${wrapped.masterKeyId} is not configured`);
     }
+    const body = Buffer.from(wrapped.wrappedKey, "base64url");
+    const attempts: Array<{ key: Uint8Array; version: string }> = [];
+    if (master) {
+      attempts.push({ key: master, version: WRAP_AAD_VERSION });
+      attempts.push({ key: master, version: HISTORICAL_WRAP_AAD_VERSION });
+    }
+    if (wrapped.masterKeyId === DERIVED_MASTER_KEY_ID && this.historicalEnvKey) {
+      attempts.push({ key: this.historicalEnvKey, version: HISTORICAL_WRAP_AAD_VERSION });
+    }
+    for (const attempt of attempts) {
+      try {
+        const decipher = createDecipheriv("aes-256-gcm", attempt.key, body.subarray(0, 12));
+        decipher.setAAD(wrapAad(context, attempt.version));
+        decipher.setAuthTag(body.subarray(body.length - 16));
+        return Buffer.concat([
+          decipher.update(body.subarray(12, body.length - 16)),
+          decipher.final(),
+        ]);
+      } catch {
+        continue;
+      }
+    }
+    throw new Error(`Space key could not be unwrapped with master key ${wrapped.masterKeyId}`);
   }
 }
 

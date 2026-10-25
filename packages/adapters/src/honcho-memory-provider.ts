@@ -38,7 +38,7 @@ import { truncateUtf8 } from "./utf8.js";
 export const HONCHO_PROVIDER_ID = "honcho";
 
 // Shared peers are workspace-scoped; only an explicit workspace opts Spaces into sharing.
-const SHARED_PEER_ID = honchoResourceId("rakazo-shared");
+const SHARED_PEER_ID = honchoResourceId("lumio-shared");
 
 const DEFAULT_REASONING_LEVEL: HonchoReasoningLevel = "low";
 

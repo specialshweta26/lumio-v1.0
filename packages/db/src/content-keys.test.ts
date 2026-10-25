@@ -1,10 +1,11 @@
-import { randomBytes } from "node:crypto";
+import { createCipheriv, hkdfSync, randomBytes } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import type { SpaceKeyRecord, SpaceKeyStore } from "./content-keys.js";
 import {
   ContentKeyRing,
   DERIVED_MASTER_KEY_ID,
   LocalKeyProvider,
+  localKeyProviderFromEnv,
   masterKeysFromEnv,
 } from "./content-keys.js";
 
@@ -50,10 +51,39 @@ describe("masterKeysFromEnv", () => {
     ).toEqual(keys[0]!.key);
   });
 
-  it("keeps the historical HKDF labels so existing space keys still unwrap", () => {
+  it("derives a stable master key from ENCRYPTION_KEY", () => {
     const key = masterKeysFromEnv({ ENCRYPTION_KEY: "a".repeat(40), NODE_ENV: "production" })[0]!.key;
     expect(Buffer.from(key).toString("hex")).toBe(
+      "4d3918d978cea21fc30c84d7a372503202bcd050fd8ee249b77aebeb53ccbe9c",
+    );
+  });
+
+  it("unwraps space keys sealed under the previous product labels", async () => {
+    const env = { ENCRYPTION_KEY: "a".repeat(40), NODE_ENV: "production" };
+    const historical = Buffer.from(
+      hkdfSync(
+        "sha256",
+        Buffer.from(env.ENCRYPTION_KEY, "utf8"),
+        Buffer.from("rakazo"),
+        "rakazo/content-master-key/v1",
+        32,
+      ),
+    );
+    expect(historical.toString("hex")).toBe(
       "1a37d8e3afee4c02891b487c0542ca5b61af27275d00aeec7ae273fee40c807f",
+    );
+    const dataKey = randomBytes(32);
+    const context = { spaceId: "space-1", version: 1 };
+    const iv = randomBytes(12);
+    const cipher = createCipheriv("aes-256-gcm", historical, iv);
+    cipher.setAAD(Buffer.from(`rakazo/space-key/v1\0${context.spaceId}\0${context.version}`));
+    const enc = Buffer.concat([cipher.update(dataKey), cipher.final()]);
+    const wrapped = {
+      masterKeyId: DERIVED_MASTER_KEY_ID,
+      wrappedKey: Buffer.concat([iv, enc, cipher.getAuthTag()]).toString("base64url"),
+    };
+    expect(Buffer.from(await localKeyProviderFromEnv(env).unwrap(wrapped, context))).toEqual(
+      dataKey,
     );
   });
 

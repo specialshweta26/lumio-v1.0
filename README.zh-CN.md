@@ -4,13 +4,12 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/specialshweta26/lumio-v1.0?labelColor=black&style=for-the-badge&color=2563EB)](https://github.com/specialshweta26/lumio-v1.0/stargazers)
 [![加入 Discord 社区](https://img.shields.io/badge/Discord-Join%20the%20community-5865F2?labelColor=black&style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/RWwKa2Sn7h)
-[![在 App Store 下载 iPhone 版](https://img.shields.io/badge/App%20Store-Download%20for%20iPhone-black?labelColor=black&style=for-the-badge&logo=apple&logoColor=white)](https://apps.apple.com/app/lumio/id6801531099)
 [![下载 Android APK](https://img.shields.io/badge/Android-Download%20APK-black?labelColor=black&style=for-the-badge&logo=android&logoColor=white)](https://github.com/specialshweta26/lumio-v1.0/releases/download/android/lumio.apk)
 
 ![Lumio：由你掌控的 AI 队友](./docs/readme-hero.png)
 
 Lumio 是一个开源 AI 智能体项目，让你拥有可长期协作的 AI 队友，也可以作为自托管 AI 助手在自己的电脑上运行。
-它提供网页版、Electron 桌面应用，以及 [iPhone](https://apps.apple.com/app/lumio/id6801531099) 和
+它提供网页版、Electron 桌面应用，以及
 [Android](https://github.com/specialshweta26/lumio-v1.0/releases/download/android/lumio.apk) 应用。
 你可以接入自己的模型和计算环境提供商，也可以在本地运行完整服务。
 

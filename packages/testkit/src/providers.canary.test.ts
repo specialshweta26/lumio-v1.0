@@ -38,7 +38,7 @@ describeE2b("live E2B canary", () => {
       signal: new AbortController().signal,
     };
     const computer = await sandbox.provision(
-      { botId: "canary", homePath: "/home/user/rakazo-home" },
+      { botId: "canary", homePath: "/home/user/lumio-home" },
       ctx,
     );
     try {
@@ -68,7 +68,7 @@ describeBoat("live Boat canary", () => {
       userId: "boat-canary",
       signal: new AbortController().signal,
     };
-    const request = { botId: "boat-canary", homePath: "/home/user/rakazo-home" };
+    const request = { botId: "boat-canary", homePath: "/home/user/lumio-home" };
     let computer = await sandbox.provision(request, ctx);
     try {
       await sandbox.prepare(computer, ctx);
