@@ -1,0 +1,24 @@
+appId: com.lumio.app
+name: Compose
+---
+- runFlow:
+    file: ../subflows/sign-in.yaml
+    env:
+      LUMIO_ACTIVE_EMAIL: ${LUMIO_SCREENSHOT_EMAIL}
+- openLink: "lumio:///new-space"
+- extendedWaitUntil:
+    visible: "Customer support|Create space"
+    timeout: 15000
+- takeScreenshot: 02-new-space
+- tapOn: "Cancel"
+- openLink: "lumio:///new-group"
+- extendedWaitUntil:
+    visible: "Search bots"
+    timeout: 15000
+- tapOn: "Researcher"
+- tapOn: "Writer"
+- takeScreenshot: 03-new-group
+- tapOn: "Next"
+- assertVisible: "Skip"
+- takeScreenshot: 04-new-group-name
+- openLink: "lumio:///"

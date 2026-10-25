@@ -1,0 +1,9 @@
+# Optional drop-in: /etc/systemd/system/lumio-backup.service.d/alerts.conf
+[Unit]
+OnFailure=lumio-backup-alert.service
+
+[Service]
+ExecStartPost=-/usr/local/sbin/lumio-host-alert backup-failure ""
+ReadWritePaths=/var/lib/lumio/alerts
+StateDirectory=lumio/alerts
+StateDirectoryMode=0700

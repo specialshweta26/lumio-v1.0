@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerabilities
+    url: https://github.com/specialshweta26/lumio-v1.0/blob/main/SECURITY.md
+    about: Report security issues to security@lumio.com — do not open a public issue.
+  - name: User support
+    url: mailto:support@lumio.com
+    about: Questions about using Lumio or self-hosting help.
+  - name: Maintainer
+    url: mailto:elie@lumio.com
+    about: Reach the maintainer directly.

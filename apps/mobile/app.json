@@ -1,0 +1,106 @@
+{
+  "expo": {
+    "name": "Lumio",
+    "slug": "lumio",
+    "owner": "inbox-zero",
+    "scheme": "lumio",
+    "version": "1.0.7",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "icon": "./assets/icon.png",
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FCFCFC",
+          "dark": {
+            "backgroundColor": "#141414"
+          }
+        }
+      ],
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": false,
+          "microphonePermission": "Lumio uses the microphone for voice calls with your bots."
+        }
+      ],
+      [
+        "expo-speech-recognition",
+        {
+          "speechRecognitionPermission": "Lumio turns your speech into messages during voice calls.",
+          "microphonePermission": "Lumio uses the microphone for voice calls with your bots."
+        }
+      ],
+      "expo-localization",
+      "@react-native-vector-icons/ionicons",
+      "@react-native-vector-icons/material-design-icons",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Lumio uses your photo library so you can attach images to a bot message.",
+          "cameraPermission": "Lumio uses the camera so you can attach photos to a bot message.",
+          "microphonePermission": "Lumio uses the microphone for voice calls with your bots."
+        }
+      ],
+      "expo-sharing",
+      "./plugins/with-worklets-headers",
+      "./plugins/with-scene-lifecycle",
+      "./plugins/with-lan-cleartext"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.lumio.app",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "icon": "../../packages/ui-tokens/assets/Lumio.icon",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "NSCameraUsageDescription": "Lumio uses the camera so you can attach photos to a bot message.",
+        "NSPhotoLibraryUsageDescription": "Lumio uses your photo library so you can attach images to a bot message.",
+        "NSLocalNetworkUsageDescription": "Lumio connects to a self-hosted Lumio server on your local network.",
+        "NSAppTransportSecurity": {
+          "NSAllowsLocalNetworking": true
+        }
+      }
+    },
+    "android": {
+      "package": "com.lumio.app",
+      "versionCode": 10,
+      "softwareKeyboardLayoutMode": "resize",
+      "icon": "./assets/icon.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "monochromeImage": "./assets/monochrome-icon.png",
+        "backgroundImage": "./assets/icon-background.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "router": {},
+      "supportsRTL": true,
+      "eas": {
+        "projectId": "07f7eb04-45e3-47fe-9374-99a2f991131e"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/07f7eb04-45e3-47fe-9374-99a2f991131e"
+    }
+  }
+}
