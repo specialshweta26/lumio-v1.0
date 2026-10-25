@@ -50,6 +50,13 @@ describe("masterKeysFromEnv", () => {
     ).toEqual(keys[0]!.key);
   });
 
+  it("keeps the historical HKDF labels so existing space keys still unwrap", () => {
+    const key = masterKeysFromEnv({ ENCRYPTION_KEY: "a".repeat(40), NODE_ENV: "production" })[0]!.key;
+    expect(Buffer.from(key).toString("hex")).toBe(
+      "1a37d8e3afee4c02891b487c0542ca5b61af27275d00aeec7ae273fee40c807f",
+    );
+  });
+
   it("puts configured keys first and keeps the derived key for unwrap", () => {
     const hex = randomBytes(32).toString("hex");
     const base64 = randomBytes(32).toString("base64");
