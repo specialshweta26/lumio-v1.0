@@ -31,10 +31,6 @@ Lumio は現在ベータ版です。詳しくは [lumio.com](https://lumio.com) 
 - Composio または Pipedream Connect によるアプリ連携に加え、ユーザーが追加できる Treg、リモート MCP、OpenAPI のツールソース
 - Docker、E2B、Daytona、CreateOS、Boat、信頼済みローカルコンピューターに対応
 
-## デモ
-
-https://github.com/user-attachments/assets/dccdeddb-2134-4a56-8eed-b2e591736b1c
-
 ## 謝辞
 
 - [PromptLayer](https://promptlayer.com/?utm_source=github&utm_medium=referral&utm_campaign=lumio_readme)

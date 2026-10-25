@@ -47,10 +47,6 @@ Muse、Dots、Instinct、Claude Duet 和 Hark Pro 是托管式助手；OpenClaw 
 - 通过 Composio 或 Pipedream Connect 集成应用，也支持用户自行安装的 Treg、远程 MCP 和 OpenAPI 工具来源
 - 支持 Docker、E2B、Daytona、CreateOS、Box，以及受信任的本机计算环境
 
-## 演示
-
-https://github.com/user-attachments/assets/dccdeddb-2134-4a56-8eed-b2e591736b1c
-
 ## 技术栈
 
 - TypeScript

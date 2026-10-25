@@ -26,10 +26,6 @@ Lumio is in beta. The hosted app is [lumio-superbot.onrender.com](https://lumio-
 - App integrations through Composio or Pipedream Connect, plus user-installed Treg, remote MCP, and OpenAPI tool sources
 - Docker, E2B, Daytona, CreateOS, Boat, and trusted local-computer support
 
-## Demo
-
-https://github.com/user-attachments/assets/dccdeddb-2134-4a56-8eed-b2e591736b1c
-
 ## Thanks
 
 - [PromptLayer](https://promptlayer.com/?utm_source=github&utm_medium=referral&utm_campaign=lumio_readme)
